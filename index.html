@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b0f19" />
+  <title>ScalpWiseTK — Precision Position & MT5 Risk Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-surface: #131a2a;
+      --bg-surface-2: #192236;
+      --bg-input: #0e1422;
+      --border: #232f48;
+      --border-focus: #38bdf8;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.14);
+      --crimson: #ef4444;
+      --crimson-bg: rgba(239, 68, 68, 0.14);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.14);
+      --cyan: #38bdf8;
+      --cyan-bg: rgba(56, 189, 248, 0.14);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.45;
+      min-height: 100vh;
+      padding: 16px 14px 48px;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .app-shell {
+      max-width: 540px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Header */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 2px;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      color: #062118;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: block;
+    }
+
+    .mt5-trigger-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--cyan);
+      background: var(--cyan-bg);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 7px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mt5-trigger-btn.connected {
+      color: var(--emerald);
+      background: var(--emerald-bg);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    .mt5-trigger-btn.connected .status-dot {
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    /* Live MT5 Account Sync Bar */
+    .mt5-sync-bar {
+      display: none;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(19, 26, 42, 0.95) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mt5-sync-bar.visible {
+      display: flex;
+    }
+
+    .mt5-sync-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .mt5-acct-id {
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mode-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .mode-pill.trade {
+      background: var(--emerald-bg);
+      color: var(--emerald);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .mt5-sync-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .mini-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .mini-btn.danger {
+      color: var(--crimson);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .mt5-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .mt5-metric-item {
+      background: rgba(11, 15, 25, 0.65);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 7px 9px;
+    }
+
+    .mt5-metric-label {
+      font-size: 10.5px;
+      color: var(--text-secondary);
+    }
+
+    .mt5-metric-val {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 1px;
+    }
+
+    /* Hero Output Card */
+    .hero-card {
+      background: linear-gradient(165deg, #162035 0%, #101726 100%);
+      border: 1px solid #283655;
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .hero-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .hero-lots {
+      font-size: 36px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.1;
+      margin-top: 2px;
+    }
+
+    .hero-lots span {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--emerald);
+      margin-left: 4px;
+    }
+
+    .lot-breakdown {
+      text-align: right;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .lot-breakdown strong {
+      color: var(--text-primary);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-box {
+      background: rgba(11, 15, 25, 0.65);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+
+    .stat-val {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .val-risk { color: var(--crimson); }
+    .val-profit { color: var(--emerald); }
+    .val-amber { color: var(--amber); }
+
+    /* R:R Bar */
+    .rr-wrap {
+      background: rgba(11, 15, 25, 0.65);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .rr-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .rr-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .rr-track {
+      height: 7px;
+      background: #1e293b;
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .rr-fill-risk {
+      background: var(--crimson);
+      height: 100%;
+      transition: width 0.25s ease;
+    }
+
+    .rr-fill-reward {
+      background: var(--emerald);
+      height: 100%;
+      transition: width 0.25s ease;
+    }
+
+    /* Cards & Controls */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Segmented Tabs */
+    .seg-control {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .seg-btn.active {
+      background: var(--bg-surface-2);
+      color: var(--text-primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .seg-btn.dir-buy.active {
+      background: var(--emerald-bg);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .seg-btn.dir-sell.active {
+      background: var(--crimson-bg);
+      color: var(--crimson);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    /* Inputs */
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .field-full {
+      grid-column: 1 / -1;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .input-box, select.input-box {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14.5px;
+      font-weight: 600;
+      padding: 11px 12px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    select.input-box {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .input-box:focus {
+      border-color: var(--border-focus);
+    }
+
+    .pw-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .pw-wrap .input-box {
+      padding-right: 54px;
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Toggle Switch Row */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      gap: 12px;
+    }
+
+    .switch-info strong {
+      display: block;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .switch-info span {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #283655;
+      transition: 0.2s;
+      border-radius: 999px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #f8fafc;
+      transition: 0.2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--emerald);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Preset Chips */
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip:hover, .chip.active {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: var(--amber-bg);
+    }
+
+    /* Gold Toggle Banner */
+    .gold-toggle {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--amber-bg);
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .gold-toggle.visible {
+      display: flex;
+    }
+
+    .gold-toggle span {
+      color: #fde68a;
+      font-weight: 600;
+    }
+
+    .gold-btn {
+      background: #1e1b18;
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    /* Validation & Status Alerts */
+    .alert-box {
+      display: none;
+      background: var(--crimson-bg);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      font-size: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      margin-top: 10px;
+    }
+
+    .alert-box.visible {
+      display: block;
+    }
+
+    .info-note {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #bae6fd;
+      font-size: 11.5px;
+      padding: 9px 11px;
+      border-radius: var(--radius-md);
+      line-height: 1.45;
+    }
+
+    /* Action Buttons */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 13px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--emerald);
+      color: #052e20;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface-2);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    /* Session Log */
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-item {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 11px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+    }
+
+    .log-meta {
+      color: var(--text-secondary);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .empty-log {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12.5px;
+      padding: 14px 0;
+    }
+
+    .clear-link {
+      background: none;
+      border: none;
+      color: var(--crimson);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Modal Backdrop & Dialog */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 16, 0.82);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 460px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: var(--bg-surface);
+      border: 1px solid #2e3f63;
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .close-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-badge">SW</div>
+        <div>
+          <div class="brand-title">ScalpWiseTK</div>
+          <span class="brand-sub">Forex • Gold • Crypto Risk Terminal</span>
+        </div>
+      </div>
+      <button type="button" class="mt5-trigger-btn" id="openMt5ModalBtn">
+        <span class="status-dot"></span>
+        <span id="mt5BtnLabel">Connect MT5</span>
+      </button>
+    </header>
+
+    <!-- Live MT5 Account Sync Bar (Shown when connected) -->
+    <section class="mt5-sync-bar" id="mt5SyncBar" aria-label="Connected MT5 Account">
+      <div class="mt5-sync-top">
+        <div class="mt5-acct-id">
+          <span class="mono" id="syncAccountLabel">MT5 #000000 • Server</span>
+          <span class="mode-pill" id="syncModeBadge">READ-ONLY</span>
+        </div>
+        <div class="mt5-sync-actions">
+          <button type="button" class="mini-btn" id="refreshMt5Btn">Sync</button>
+          <button type="button" class="mini-btn danger" id="disconnectMt5Btn">Disconnect</button>
+        </div>
+      </div>
+      <div class="mt5-metrics">
+        <div class="mt5-metric-item">
+          <div class="mt5-metric-label">Balance</div>
+          <div class="mt5-metric-val mono" id="syncBalanceVal">$0.00</div>
+        </div>
+        <div class="mt5-metric-item">
+          <div class="mt5-metric-label">Equity</div>
+          <div class="mt5-metric-val mono" id="syncEquityVal">$0.00</div>
+        </div>
+        <div class="mt5-metric-item">
+          <div class="mt5-metric-label">Free Margin</div>
+          <div class="mt5-metric-val mono" id="syncFreeMarginVal">$0.00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sticky Hero Metrics -->
+    <section class="hero-card" aria-label="Calculated Position Results">
+      <div class="hero-top">
+        <div>
+          <div class="hero-label">Recommended Position Size</div>
+          <div class="hero-lots mono" id="outLots">0.50<span>LOTS</span></div>
+        </div>
+        <div class="lot-breakdown mono">
+          <div>Mini: <strong id="outMini">5.00</strong></div>
+          <div>Micro: <strong id="outMicro">50.0</strong></div>
+          <div>Units: <strong id="outUnits">50,000</strong></div>
+        </div>
+      </div>
+
+      <div class="hero-grid">
+        <div class="stat-box">
+          <div class="stat-label">Cash Risk (<span id="outRiskPctLabel">1.0%</span>)</div>
+          <div class="stat-val mono val-risk" id="outCashRisk">-$100.00</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Target Profit</div>
+          <div class="stat-val mono val-profit" id="outCashProfit">+$200.00</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Pip / Point Value</div>
+          <div class="stat-val mono" id="outPipVal">$5.00 / pip</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Est. Margin (<span id="outLevLabel">1:100</span>)</div>
+          <div class="stat-val mono val-amber" id="outMargin">$542.50</div>
+        </div>
+      </div>
+
+      <div class="rr-wrap">
+        <div class="rr-header">
+          <span class="mono" style="font-weight:700;">R:R Ratio <span id="outRR">1 : 2.00</span></span>
+          <span class="rr-badge" id="outQualityBadge" style="background: var(--emerald-bg); color: var(--emerald);">HIGH R:R</span>
+        </div>
+        <div class="rr-track">
+          <div class="rr-fill-risk" id="barRisk" style="width: 33.3%;"></div>
+          <div class="rr-fill-reward" id="barReward" style="width: 66.7%;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Instrument & Account Setup -->
+    <section class="card">
+      <div class="section-title">
+        <span>1. Instrument & Account</span>
+        <span class="mono" id="contractHint" style="color: var(--cyan); font-size: 11px;">1 Lot = 100,000</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field field-full">
+          <label for="symbolSelect">Trading Pair / Asset</label>
+          <select id="symbolSelect" class="input-box">
+            <optgroup label="Forex Majors & Crosses">
+              <option value="EURUSD" selected>EUR/USD — Euro / US Dollar</option>
+              <option value="GBPUSD">GBP/USD — British Pound / US Dollar</option>
+              <option value="USDJPY">USD/JPY — US Dollar / Japanese Yen</option>
+              <option value="USDCAD">USD/CAD — US Dollar / Canadian Dollar</option>
+              <option value="AUDUSD">AUD/USD — Australian Dollar / US Dollar</option>
+              <option value="GBPJPY">GBP/JPY — British Pound / Japanese Yen</option>
+            </optgroup>
+            <optgroup label="Metals & Commodities">
+              <option value="XAUUSD">XAU/USD — Gold Spot</option>
+            </optgroup>
+            <optgroup label="Crypto CFDs">
+              <option value="BTCUSD">BTC/USD — Bitcoin</option>
+              <option value="ETHUSD">ETH/USD — Ethereum</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Gold Pip/Point Convention Toggle -->
+        <div class="gold-toggle field-full" id="goldToggleBox">
+          <span>Gold Scale: <strong id="goldModeText">0.10 = 1 Pip ($10/lot)</strong></span>
+          <button type="button" class="gold-btn" id="goldModeBtn">Switch to 0.01 Point</button>
+        </div>
+
+        <div class="field">
+          <label for="balanceInput">
+            <span>Account Balance ($)</span>
+            <span id="syncedTag" class="hidden" style="color: var(--emerald); font-size: 10.5px; font-weight: 700;">MT5 SYNC</span>
+          </label>
+          <input type="number" id="balanceInput" class="input-box" value="10000" min="1" step="any" />
+        </div>
+
+        <div class="field">
+          <label for="riskInput">Risk Per Trade (%)</label>
+          <input type="number" id="riskInput" class="input-box" value="1.0" min="0.05" max="100" step="0.1" />
+          <div class="chip-row" data-target="riskInput">
+            <button type="button" class="chip" data-val="0.5">0.5%</button>
+            <button type="button" class="chip active" data-val="1">1%</button>
+            <button type="button" class="chip" data-val="2">2%</button>
+            <button type="button" class="chip" data-val="3">3%</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="leverageSelect">Account Leverage</label>
+          <select id="leverageSelect" class="input-box">
+            <option value="30">1 : 30</option>
+            <option value="50">1 : 50</option>
+            <option value="100" selected>1 : 100</option>
+            <option value="200">1 : 200</option>
+            <option value="500">1 : 500</option>
+            <option value="1000">1 : 1000</option>
+            <option value="2000">1 : 2000</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="refPriceInput">Current Price (Margin)</label>
+          <input type="number" id="refPriceInput" class="input-box" value="1.0850" step="any" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Stop Loss & Take Profit Setup -->
+    <section class="card">
+      <div class="section-title">
+        <span>2. Stop Loss & Take Profit</span>
+        <span class="mono" id="pipSummary" style="color: var(--text-primary); font-size: 11px;">SL: 20 • TP: 40</span>
+      </div>
+
+      <div class="seg-control" role="tablist">
+        <button type="button" class="seg-btn active" id="modePipsBtn">By Pips / Points</button>
+        <button type="button" class="seg-btn" id="modePriceBtn">By Price Levels</button>
+      </div>
+
+      <!-- Mode A: Pips -->
+      <div id="pipsPanel" class="field-grid">
+        <div class="field">
+          <label for="slPipsInput">Stop Loss (<span class="unitLabel">Pips</span>)</label>
+          <input type="number" id="slPipsInput" class="input-box" value="20" min="0.1" step="any" />
+          <div class="chip-row" data-target="slPipsInput">
+            <button type="button" class="chip" data-val="10">10</button>
+            <button type="button" class="chip active" data-val="20">20</button>
+            <button type="button" class="chip" data-val="30">30</button>
+            <button type="button" class="chip" data-val="50">50</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="tpPipsInput">Take Profit (<span class="unitLabel">Pips</span>)</label>
+          <input type="number" id="tpPipsInput" class="input-box" value="40" min="0" step="any" />
+          <div class="chip-row" data-target="tpPipsInput">
+            <button type="button" class="chip" data-val="20">20</button>
+            <button type="button" class="chip active" data-val="40">40</button>
+            <button type="button" class="chip" data-val="60">60</button>
+            <button type="button" class="chip" data-val="100">100</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode B: Price Levels -->
+      <div id="pricePanel" class="field-grid hidden">
+        <div class="field field-full">
+          <div class="seg-control" style="margin-bottom: 0;">
+            <button type="button" class="seg-btn dir-buy active" id="dirBuyBtn">BUY / LONG</button>
+            <button type="button" class="seg-btn dir-sell" id="dirSellBtn">SELL / SHORT</button>
+          </div>
+        </div>
+
+        <div class="field field-full">
+          <label for="entryPriceInput">Entry Price</label>
+          <input type="number" id="entryPriceInput" class="input-box" value="1.0850" step="any" />
+        </div>
+
+        <div class="field">
+          <label for="slPriceInput">Stop Loss Price</label>
+          <input type="number" id="slPriceInput" class="input-box" value="1.0830" step="any" />
+        </div>
+
+        <div class="field">
+          <label for="tpPriceInput">Take Profit Price</label>
+          <input type="number" id="tpPriceInput" class="input-box" value="1.0890" step="any" />
+        </div>
+      </div>
+
+      <div class="alert-box" id="validationAlert"></div>
+    </section>
+
+    <!-- Actions -->
+    <div class="action-row">
+      <button type="button" class="btn btn-primary" id="copyPlanBtn">Copy Trade Plan</button>
+      <button type="button" class="btn btn-secondary" id="saveLogBtn">Save to Log</button>
+    </div>
+
+    <!-- Session Trade Log -->
+    <section class="card">
+      <div class="section-title">
+        <span>Session Trade Plan Log</span>
+        <button type="button" class="clear-link" id="clearLogBtn">Clear All</button>
+      </div>
+      <div class="log-list" id="logList">
+        <div class="empty-log">No saved trade setups yet. Tap "Save to Log" to record a plan.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MT5 Credentials Connection Modal -->
+  <div class="modal-backdrop" id="mt5Modal" role="dialog" aria-modal="true" aria-labelledby="mt5ModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="mt5ModalTitle">Connect MetaTrader 5 Account</div>
+        <button type="button" class="close-btn" id="closeMt5ModalBtn" aria-label="Close">×</button>
+      </div>
+
+      <div class="info-note">
+        Enter your MT5 account credentials and your HTTPS MT5 Bridge API endpoint, or enable <strong>Test Demo Sync</strong> to preview live account balance &amp; leverage syncing. Passwords are never saved in browser storage.
+      </div>
+
+      <form id="mt5ConnectForm" style="display:flex; flex-direction:column; gap:11px;">
+        <div class="field">
+          <label for="mt5ServerInput">Broker Server Name</label>
+          <input type="text" id="mt5ServerInput" class="input-box" placeholder="e.g. Exness-MT5Real14" required />
+        </div>
+
+        <div class="field">
+          <label for="mt5LoginInput">MT5 Account Login (ID)</label>
+          <input type="text" id="mt5LoginInput" class="input-box" inputmode="numeric" placeholder="e.g. 104829104" required />
+        </div>
+
+        <div class="field">
+          <label for="mt5PasswordInput">
+            <span id="pwLabelText">Investor Password (Read-Only)</span>
+          </label>
+          <div class="pw-wrap">
+            <input type="password" id="mt5PasswordInput" class="input-box" placeholder="••••••••••••" required />
+            <button type="button" class="pw-toggle" id="togglePwBtn">SHOW</button>
+          </div>
+        </div>
+
+        <div class="switch-row">
+          <div class="switch-info">
+            <strong>Read-Only (Investor Password)</strong>
+            <span>Sync balance, equity &amp; leverage without trade execution rights</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="mt5ReadOnlyToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-row">
+          <div class="switch-info">
+            <strong>Test Demo Bridge Simulation</strong>
+            <span>Simulate an MT5 connection without a live backend server yet</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="mt5DemoSimToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="field" id="bridgeUrlField">
+          <label for="mt5BridgeUrlInput">MT5 Bridge API Endpoint (HTTPS)</label>
+          <input type="url" id="mt5BridgeUrlInput" class="input-box" placeholder="https://your-mt5-bridge.example.com/api/connect" />
+        </div>
+
+        <div class="switch-row">
+          <div class="switch-info">
+            <strong>Remember Server &amp; Login ID</strong>
+            <span>Saves server &amp; login locally (password is never stored)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="mt5RememberToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="alert-box" id="mt5ModalError" style="margin-top:0;"></div>
+
+        <div class="action-row" style="margin-top: 4px;">
+          <button type="button" class="btn btn-secondary" id="cancelMt5Btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitMt5Btn">Connect &amp; Sync</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const ASSETS = {
+      EURUSD: { name: 'EUR/USD', contract: 100000, pipSize: 0.0001, pipValPerLot: 10, defaultPrice: 1.0850, defaultSL: 20, defaultTP: 40, baseUsd: false },
+      GBPUSD: { name: 'GBP/USD', contract: 100000, pipSize: 0.0001, pipValPerLot: 10, defaultPrice: 1.2650, defaultSL: 20, defaultTP: 40, baseUsd: false },
+      AUDUSD: { name: 'AUD/USD', contract: 100000, pipSize: 0.0001, pipValPerLot: 10, defaultPrice: 0.6550, defaultSL: 15, defaultTP: 30, baseUsd: false },
+      USDJPY: { name: 'USD/JPY', contract: 100000, pipSize: 0.01,   pipValPerLot: 6.67, defaultPrice: 150.00, defaultSL: 20, defaultTP: 40, baseUsd: true },
+      USDCAD: { name: 'USD/CAD', contract: 100000, pipSize: 0.0001, pipValPerLot: 7.35, defaultPrice: 1.3600, defaultSL: 20, defaultTP: 40, baseUsd: true },
+      GBPJPY: { name: 'GBP/JPY', contract: 100000, pipSize: 0.01,   pipValPerLot: 6.67, defaultPrice: 190.00, defaultSL: 25, defaultTP: 50, baseUsd: false },
+      XAUUSD: { name: 'XAU/USD', contract: 100,    pipSize: 0.10,   pipValPerLot: 10, defaultPrice: 2650.00, defaultSL: 30, defaultTP: 60, baseUsd: false },
+      BTCUSD: { name: 'BTC/USD', contract: 1,      pipSize: 1.00,   pipValPerLot: 1,  defaultPrice: 68000.00, defaultSL: 250, defaultTP: 500, baseUsd: false },
+      ETHUSD: { name: 'ETH/USD', contract: 1,      pipSize: 1.00,   pipValPerLot: 1,  defaultPrice: 2600.00, defaultSL: 25, defaultTP: 50, baseUsd: false }
+    };
+
+    let state = {
+      symbol: 'EURUSD',
+      mode: 'pips',
+      direction: 'buy',
+      goldPointMode: false,
+      mt5: {
+        connected: false,
+        server: '',
+        login: '',
+        password: '', // Kept in memory only during session, never persisted
+        readOnly: true,
+        demoSim: true,
+        bridgeUrl: '',
+        balance: 0,
+        equity: 0,
+        freeMargin: 0,
+        leverage: 100,
+        currency: 'USD'
+      }
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function getAssetConfig() {
+      const cfg = { ...ASSETS[state.symbol] };
+      if (state.symbol === 'XAUUSD' && state.goldPointMode) {
+        cfg.pipSize = 0.01;
+        cfg.pipValPerLot = 1;
+      }
+      const px = parseFloat($('refPriceInput').value) || cfg.defaultPrice;
+      if (state.symbol === 'USDJPY' && px > 0) {
+        cfg.pipValPerLot = (0.01 / px) * 100000;
+      } else if (state.symbol === 'USDCAD' && px > 0) {
+        cfg.pipValPerLot = (0.0001 / px) * 100000;
+      }
+      return cfg;
+    }
+
+    function applySymbolDefaults() {
+      const cfg = getAssetConfig();
+      $('contractHint').textContent = `1 Lot = ${cfg.contract.toLocaleString()}`;
+      $('refPriceInput').value = cfg.defaultPrice;
+      $('slPipsInput').value = cfg.defaultSL;
+      $('tpPipsInput').value = cfg.defaultTP;
+
+      const step = cfg.pipSize;
+      $('entryPriceInput').value = cfg.defaultPrice;
+      $('slPriceInput').value = +(cfg.defaultPrice - cfg.defaultSL * step).toFixed(5);
+      $('tpPriceInput').value = +(cfg.defaultPrice + cfg.defaultTP * step).toFixed(5);
+
+      const isGold = state.symbol === 'XAUUSD';
+      $('goldToggleBox').classList.toggle('visible', isGold);
+      document.querySelectorAll('.unitLabel').forEach(el => {
+        el.textContent = (isGold && state.goldPointMode) ? 'Points' : 'Pips';
+      });
+    }
+
+    function calculate() {
+      const cfg = getAssetConfig();
+      const balance = Math.max(0, parseFloat($('balanceInput').value) || 0);
+      const riskPct = Math.max(0, parseFloat($('riskInput').value) || 0);
+      const leverage = Math.max(1, parseFloat($('leverageSelect').value) || 100);
+      const refPrice = Math.max(0.00001, parseFloat($('refPriceInput').value) || cfg.defaultPrice);
+
+      const alertEl = $('validationAlert');
+      alertEl.classList.remove('visible');
+      alertEl.textContent = '';
+
+      let slPips = 0;
+      let tpPips = 0;
+
+      if (state.mode === 'pips') {
+        slPips = Math.max(0, parseFloat($('slPipsInput').value) || 0);
+        tpPips = Math.max(0, parseFloat($('tpPipsInput').value) || 0);
+      } else {
+        const entry = parseFloat($('entryPriceInput').value) || 0;
+        const sl = parseFloat($('slPriceInput').value) || 0;
+        const tp = parseFloat($('tpPriceInput').value) || 0;
+        $('refPriceInput').value = entry || refPrice;
+
+        if (state.direction === 'buy') {
+          if (sl >= entry && entry > 0) {
+            alertEl.textContent = 'Invalid BUY setup: Stop Loss must be below Entry Price.';
+            alertEl.classList.add('visible');
+          } else if (tp > 0 && tp <= entry) {
+            alertEl.textContent = 'Invalid BUY setup: Take Profit must be above Entry Price.';
+            alertEl.classList.add('visible');
+          }
+          slPips = Math.max(0, (entry - sl) / cfg.pipSize);
+          tpPips = Math.max(0, (tp - entry) / cfg.pipSize);
+        } else {
+          if (sl <= entry && entry > 0) {
+            alertEl.textContent = 'Invalid SELL setup: Stop Loss must be above Entry Price.';
+            alertEl.classList.add('visible');
+          } else if (tp > 0 && tp >= entry) {
+            alertEl.textContent = 'Invalid SELL setup: Take Profit must be below Entry Price.';
+            alertEl.classList.add('visible');
+          }
+          slPips = Math.max(0, (sl - entry) / cfg.pipSize);
+          tpPips = Math.max(0, (entry - tp) / cfg.pipSize);
+        }
+      }
+
+      const cashRisk = balance * (riskPct / 100);
+      let lots = 0;
+      if (slPips > 0 && cfg.pipValPerLot > 0) {
+        lots = cashRisk / (slPips * cfg.pipValPerLot);
+      }
+
+      const units = lots * cfg.contract;
+      const pipValAtPosition = lots * cfg.pipValPerLot;
+      const cashProfit = tpPips * pipValAtPosition;
+      const rr = slPips > 0 ? (tpPips / slPips) : 0;
+
+      const notionalUsd = cfg.baseUsd ? (lots * cfg.contract) : (lots * cfg.contract * refPrice);
+      const margin = notionalUsd / leverage;
+
+      $('outLots').innerHTML = `${lots.toFixed(2)}<span>LOTS</span>`;
+      $('outMini').textContent = (lots * 10).toFixed(2);
+      $('outMicro').textContent = (lots * 100).toFixed(1);
+      $('outUnits').textContent = Math.round(units).toLocaleString();
+
+      $('outRiskPctLabel').textContent = `${riskPct.toFixed(1)}%`;
+      $('outCashRisk').textContent = `-$${cashRisk.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      $('outCashProfit').textContent = `+$${cashProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      $('outPipVal').textContent = `$${pipValAtPosition.toFixed(2)} / ${state.symbol === 'XAUUSD' && state.goldPointMode ? 'pt' : 'pip'}`;
+      $('outLevLabel').textContent = `1:${leverage}`;
+      $('outMargin').textContent = `$${margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      $('outRR').textContent = `1 : ${rr.toFixed(2)}`;
+      const badge = $('outQualityBadge');
+      if (rr >= 2) {
+        badge.textContent = 'HIGH R:R';
+        badge.style.background = 'var(--emerald-bg)';
+        badge.style.color = 'var(--emerald)';
+      } else if (rr >= 1.2) {
+        badge.textContent = 'BALANCED';
+        badge.style.background = 'var(--amber-bg)';
+        badge.style.color = 'var(--amber)';
+      } else {
+        badge.textContent = 'LOW R:R';
+        badge.style.background = 'var(--crimson-bg)';
+        badge.style.color = 'var(--crimson)';
+      }
+
+      const totalParts = 1 + rr;
+      const riskWidth = totalParts > 0 ? (1 / totalParts) * 100 : 50;
+      $('barRisk').style.width = `${Math.min(85, Math.max(15, riskWidth))}%`;
+      $('barReward').style.width = `${Math.min(85, Math.max(15, 100 - riskWidth))}%`;
+
+      const unitWord = (state.symbol === 'XAUUSD' && state.goldPointMode) ? 'pts' : 'pips';
+      $('pipSummary').textContent = `SL: ${slPips.toFixed(1)} ${unitWord} • TP: ${tpPips.toFixed(1)} ${unitWord}`;
+
+      return {
+        symbol: cfg.name,
+        lots: lots.toFixed(2),
+        riskPct: riskPct.toFixed(1),
+        cashRisk: cashRisk.toFixed(2),
+        cashProfit: cashProfit.toFixed(2),
+        slPips: slPips.toFixed(1),
+        tpPips: tpPips.toFixed(1),
+        rr: rr.toFixed(2),
+        unitWord
+      };
+    }
+
+    // --- MT5 Connection Logic ---
+    const MT5_META_KEY = 'scalpwisetk_mt5_meta_v1';
+
+    function loadSavedMt5Meta() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(MT5_META_KEY) || '{}');
+        if (saved.server) $('mt5ServerInput').value = saved.server;
+        if (saved.login) $('mt5LoginInput').value = saved.login;
+        if (saved.bridgeUrl) $('mt5BridgeUrlInput').value = saved.bridgeUrl;
+        if (typeof saved.readOnly === 'boolean') $('mt5ReadOnlyToggle').checked = saved.readOnly;
+        if (typeof saved.demoSim === 'boolean') $('mt5DemoSimToggle').checked = saved.demoSim;
+        updateModalToggleUI();
+      } catch (e) {}
+    }
+
+    function updateModalToggleUI() {
+      const readOnly = $('mt5ReadOnlyToggle').checked;
+      $('pwLabelText').textContent = readOnly
+        ? 'Investor Password (Read-Only)'
+        : 'Master Trading Password';
+
+      const demoSim = $('mt5DemoSimToggle').checked;
+      $('bridgeUrlField').classList.toggle('hidden', demoSim);
+      $('mt5BridgeUrlInput').required = !demoSim;
+    }
+
+    function applyMt5AccountData(data) {
+      state.mt5.connected = true;
+      state.mt5.balance = Number(data.balance) || 0;
+      state.mt5.equity = Number(data.equity ?? data.balance) || 0;
+      state.mt5.freeMargin = Number(data.free_margin ?? data.equity ?? data.balance) || 0;
+      state.mt5.leverage = Number(data.leverage) || 100;
+
+      // Sync into main calculator inputs
+      $('balanceInput').value = state.mt5.balance.toFixed(2);
+      const levSelect = $('leverageSelect');
+      const levVal = String(state.mt5.leverage);
+      if (![...levSelect.options].some(o => o.value === levVal)) {
+        const opt = document.createElement('option');
+        opt.value = levVal;
+        opt.textContent = `1 : ${levVal}`;
+        levSelect.appendChild(opt);
+      }
+      levSelect.value = levVal;
+
+      // Update Header & Sync Bar UI
+      const btn = $('openMt5ModalBtn');
+      btn.classList.add('connected');
+      $('mt5BtnLabel').textContent = `MT5 #${state.mt5.login}`;
+
+      $('syncAccountLabel').textContent = `MT5 #${state.mt5.login} • ${state.mt5.server}`;
+      const modeBadge = $('syncModeBadge');
+      if (state.mt5.readOnly) {
+        modeBadge.textContent = state.mt5.demoSim ? 'DEMO SIM • READ-ONLY' : 'READ-ONLY';
+        modeBadge.classList.remove('trade');
+      } else {
+        modeBadge.textContent = state.mt5.demoSim ? 'DEMO SIM • MASTER' : 'MASTER ACCESS';
+        modeBadge.classList.add('trade');
+      }
+
+      $('syncBalanceVal').textContent = `$${state.mt5.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      $('syncEquityVal').textContent = `$${state.mt5.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      $('syncFreeMarginVal').textContent = `$${state.mt5.freeMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      $('mt5SyncBar').classList.add('visible');
+      $('syncedTag').classList.remove('hidden');
+      calculate();
+    }
+
+    async function fetchMt5AccountSnapshot() {
+      const { server, login, password, readOnly, demoSim, bridgeUrl } = state.mt5;
+
+      if (demoSim) {
+        // Deterministic realistic demo account snapshot based on login ID
+        await new Promise(r => setTimeout(r, 450));
+        const seed = parseInt(String(login).slice(-4), 10) || 2500;
+        const simBalance = 5000 + (seed % 15000);
+        const simEquity = +(simBalance * 1.012).toFixed(2);
+        const simFreeMargin = +(simEquity * 0.94).toFixed(2);
+        const levChoices = [100, 200, 500, 1000];
+        const simLev = levChoices[seed % levChoices.length];
+        return {
+          balance: simBalance,
+          equity: simEquity,
+          free_margin: simFreeMargin,
+          leverage: simLev
+        };
+      }
+
+      if (!bridgeUrl || !bridgeUrl.startsWith('https://')) {
+        throw new Error('Bridge API URL must start with https:// to protect your MT5 credentials.');
+      }
+
+      const response = await fetch(bridgeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          server,
+          login: Number(login) || login,
+          password,
+          read_only: readOnly
+        })
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || payload.message || `MT5 Bridge returned HTTP ${response.status}`);
+      }
+      return payload;
+    }
+
+    $('openMt5ModalBtn').addEventListener('click', () => {
+      $('mt5ModalError').classList.remove('visible');
+      $('mt5Modal').classList.add('open');
+    });
+
+    function closeMt5Modal() {
+      $('mt5Modal').classList.remove('open');
+    }
+
+    $('closeMt5ModalBtn').addEventListener('click', closeMt5Modal);
+    $('cancelMt5Btn').addEventListener('click', closeMt5Modal);
+    $('mt5Modal').addEventListener('click', (e) => {
+      if (e.target === $('mt5Modal')) closeMt5Modal();
+    });
+
+    $('mt5ReadOnlyToggle').addEventListener('change', updateModalToggleUI);
+    $('mt5DemoSimToggle').addEventListener('change', updateModalToggleUI);
+
+    $('togglePwBtn').addEventListener('click', () => {
+      const pwInput = $('mt5PasswordInput');
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      $('togglePwBtn').textContent = isHidden ? 'HIDE' : 'SHOW';
+    });
+
+    $('mt5ConnectForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = $('mt5ModalError');
+      errBox.classList.remove('visible');
+
+      const server = $('mt5ServerInput').value.trim();
+      const login = $('mt5LoginInput').value.trim();
+      const password = $('mt5PasswordInput').value;
+      const readOnly = $('mt5ReadOnlyToggle').checked;
+      const demoSim = $('mt5DemoSimToggle').checked;
+      const bridgeUrl = $('mt5BridgeUrlInput').value.trim();
+
+      if (!server || !login || !password) {
+        errBox.textContent = 'Please enter Server, Login ID, and Password.';
+        errBox.classList.add('visible');
+        return;
+      }
+
+      state.mt5.server = server;
+      state.mt5.login = login;
+      state.mt5.password = password;
+      state.mt5.readOnly = readOnly;
+      state.mt5.demoSim = demoSim;
+      state.mt5.bridgeUrl = bridgeUrl;
+
+      if ($('mt5RememberToggle').checked) {
+        localStorage.setItem(MT5_META_KEY, JSON.stringify({
+          server,
+          login,
+          readOnly,
+          demoSim,
+          bridgeUrl
+        }));
+      } else {
+        localStorage.removeItem(MT5_META_KEY);
+      }
+
+      const submitBtn = $('submitMt5Btn');
+      const origText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Connecting...';
+
+      try {
+        const snapshot = await fetchMt5AccountSnapshot();
+        applyMt5AccountData(snapshot);
+        closeMt5Modal();
+      } catch (err) {
+        errBox.textContent = err.message || 'Unable to connect to MT5 account.';
+        errBox.classList.add('visible');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+      }
+    });
+
+    $('refreshMt5Btn').addEventListener('click', async () => {
+      const btn = $('refreshMt5Btn');
+      btn.textContent = '...';
+      try {
+        const snapshot = await fetchMt5AccountSnapshot();
+        applyMt5AccountData(snapshot);
+      } catch (err) {
+        alert(err.message || 'Sync failed');
+      } finally {
+        btn.textContent = 'Sync';
+      }
+    });
+
+    $('disconnectMt5Btn').addEventListener('click', () => {
+      state.mt5.connected = false;
+      state.mt5.password = '';
+      $('mt5PasswordInput').value = '';
+      $('mt5SyncBar').classList.remove('visible');
+      $('syncedTag').classList.add('hidden');
+      const btn = $('openMt5ModalBtn');
+      btn.classList.remove('connected');
+      $('mt5BtnLabel').textContent = 'Connect MT5';
+    });
+
+    // --- Calculator Event Listeners ---
+    $('symbolSelect').addEventListener('change', (e) => {
+      state.symbol = e.target.value;
+      applySymbolDefaults();
+      calculate();
+    });
+
+    $('goldModeBtn').addEventListener('click', () => {
+      state.goldPointMode = !state.goldPointMode;
+      $('goldModeText').textContent = state.goldPointMode
+        ? '0.01 = 1 Point ($1/lot)'
+        : '0.10 = 1 Pip ($10/lot)';
+      $('goldModeBtn').textContent = state.goldPointMode
+        ? 'Switch to 0.10 Pip'
+        : 'Switch to 0.01 Point';
+      document.querySelectorAll('.unitLabel').forEach(el => {
+        el.textContent = state.goldPointMode ? 'Points' : 'Pips';
+      });
+      calculate();
+    });
+
+    $('modePipsBtn').addEventListener('click', () => {
+      state.mode = 'pips';
+      $('modePipsBtn').classList.add('active');
+      $('modePriceBtn').classList.remove('active');
+      $('pipsPanel').classList.remove('hidden');
+      $('pricePanel').classList.add('hidden');
+      calculate();
+    });
+
+    $('modePriceBtn').addEventListener('click', () => {
+      state.mode = 'price';
+      $('modePriceBtn').classList.add('active');
+      $('modePipsBtn').classList.remove('active');
+      $('pricePanel').classList.remove('hidden');
+      $('pipsPanel').classList.add('hidden');
+      calculate();
+    });
+
+    $('dirBuyBtn').addEventListener('click', () => {
+      state.direction = 'buy';
+      $('dirBuyBtn').classList.add('active');
+      $('dirSellBtn').classList.remove('active');
+      calculate();
+    });
+
+    $('dirSellBtn').addEventListener('click', () => {
+      state.direction = 'sell';
+      $('dirSellBtn').classList.add('active');
+      $('dirBuyBtn').classList.remove('active');
+      calculate();
+    });
+
+    document.querySelectorAll('.chip-row').forEach(row => {
+      const targetId = row.getAttribute('data-target');
+      row.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          row.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          $(targetId).value = chip.getAttribute('data-val');
+          calculate();
+        });
+      });
+    });
+
+    ['balanceInput', 'riskInput', 'leverageSelect', 'refPriceInput', 'slPipsInput', 'tpPipsInput', 'entryPriceInput', 'slPriceInput', 'tpPriceInput'].forEach(id => {
+      $(id).addEventListener('input', calculate);
+      $(id).addEventListener('change', calculate);
+    });
+
+    $('copyPlanBtn').addEventListener('click', async () => {
+      const res = calculate();
+      const acctLine = state.mt5.connected ? `Account: MT5 #${state.mt5.login} (${state.mt5.server})\n` : '';
+      const text = [
+        `ScalpWiseTK Trade Plan — ${res.symbol}`,
+        acctLine + `Lot Size: ${res.lots} Lots`,
+        `Risk: $${res.cashRisk} (${res.riskPct}%) | Target: +$${res.cashProfit}`,
+        `SL: ${res.slPips} ${res.unitWord} | TP: ${res.tpPips} ${res.unitWord} (1:${res.rr} R:R)`
+      ].join('\n');
+
+      try {
+        await navigator.clipboard.writeText(text);
+        const btn = $('copyPlanBtn');
+        const orig = btn.textContent;
+        btn.textContent = 'Copied to Clipboard!';
+        setTimeout(() => { btn.textContent = orig; }, 1600);
+      } catch (err) {
+        alert(text);
+      }
+    });
+
+    const LOG_KEY = 'scalpwisetk_session_logs_v1';
+
+    function renderLogs() {
+      const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+      const container = $('logList');
+      if (!logs.length) {
+        container.innerHTML = '<div class="empty-log">No saved trade setups yet. Tap "Save to Log" to record a plan.</div>';
+        return;
+      }
+      container.innerHTML = logs.map(item => `
+        <div class="log-item">
+          <div>
+            <strong>${item.symbol}</strong> • <span class="mono" style="color:var(--emerald)">${item.lots} Lots</span>
+            <div class="log-meta mono">SL ${item.slPips} ${item.unitWord} • TP ${item.tpPips} ${item.unitWord} • 1:${item.rr} R:R</div>
+          </div>
+          <div style="text-align:right">
+            <div class="mono val-risk">-$${item.cashRisk}</div>
+            <div class="log-meta">${item.time}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    $('saveLogBtn').addEventListener('click', () => {
+      const res = calculate();
+      const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      logs.unshift({ ...res, time: now });
+      localStorage.setItem(LOG_KEY, JSON.stringify(logs.slice(0, 15)));
+      renderLogs();
+    });
+
+    $('clearLogBtn').addEventListener('click', () => {
+      localStorage.removeItem(LOG_KEY);
+      renderLogs();
+    });
+
+    // Initialize
+    loadSavedMt5Meta();
+    applySymbolDefaults();
+    calculate();
+    renderLogs();
+  </script>
+</body>
+</html>
